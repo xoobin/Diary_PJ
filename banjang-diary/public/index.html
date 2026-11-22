@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>반장 일기장 걷어라</title>
+<meta name="description" content="일기를 쓰면 담임 선생님이 코멘트를 달아 주던 그 시절, 다시 한번.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+:root{--desk:#e9dfc9;--paper:#fffdf5;--line:#cfe0ef;--margin:#f2a7a7;--ink:#3a3a3a;--pen:#1b3fa8;--red:#d93a3a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--desk);font-family:'Gaegu','Nanum Pen Script',cursive;color:var(--ink);font-size:20px;min-height:100vh;display:flex;justify-content:center;padding:20px 12px 60px}
+.wrap{width:100%;max-width:640px}
+h1{text-align:center;font-size:30px;margin:6px 0 14px}
+.note{position:relative;background:var(--paper);border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.18);padding:22px 22px 26px 56px;
+ background-image:repeating-linear-gradient(transparent 0,transparent 35px,var(--line) 36px);background-position:0 70px}
+.note::before{content:"";position:absolute;left:40px;top:0;bottom:0;width:2px;background:var(--margin)}
+.note::after{content:"";position:absolute;left:12px;top:30px;bottom:30px;width:14px;background:radial-gradient(circle,#c9bfa8 5px,transparent 6px) 0 0/14px 70px repeat-y}
+.row{display:flex;align-items:center;gap:8px;min-height:36px;flex-wrap:wrap}
+.date{font-weight:700;font-size:22px}
+label.k{font-weight:700;margin-right:4px}
+.opts{display:flex;gap:6px;flex-wrap:wrap}
+.opt{border:2px solid transparent;background:none;border-radius:10px;font:inherit;font-size:18px;padding:0 6px;cursor:pointer;line-height:34px}
+.opt .e{font-size:24px;vertical-align:middle}
+.opt.on{border-color:var(--pen);background:#e8eeff}
+input.title,textarea{width:100%;border:0;background:transparent;font:inherit;font-size:22px;color:var(--ink);outline:none}
+input.title{border-bottom:2px dashed #bbb;height:36px}
+textarea{resize:none;line-height:36px;height:180px;padding:0;background:transparent}
+.cnt{text-align:right;font-size:16px;color:#888}
+.cnt.bad{color:var(--red)}
+.err{color:var(--red);min-height:26px;font-size:18px}
+button.main{display:block;margin:10px auto 0;font:inherit;font-size:24px;font-weight:700;background:var(--pen);color:#fff;border:0;border-radius:12px;padding:8px 28px;cursor:pointer}
+button.main:disabled{opacity:.5;cursor:default}
+.comment{margin:18px 0 0 auto;max-width:78%;text-align:left;font-family:'Nanum Pen Script',cursive;font-size:28px;line-height:1.25;color:var(--pen);transform:rotate(-2deg);position:relative;padding-top:6px;border-top:2px solid var(--red)}
+.comment .stamp{position:absolute;right:-6px;top:-44px;border:3px solid var(--red);color:var(--red);border-radius:50%;width:64px;height:64px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:17px;line-height:1;transform:rotate(14deg);font-family:'Gaegu',cursive;font-weight:700;opacity:.85}
+.view .body{white-space:pre-wrap;line-height:36px;min-height:108px;font-size:22px}
+.view .ttl{font-size:24px;font-weight:700}
+.wait{text-align:center;padding:60px 10px}
+.wait .big{font-size:56px;animation:bob 1.2s infinite ease-in-out}
+.wait p{font-size:24px;transition:opacity .4s}
+@keyframes bob{50%{transform:translateY(-10px) rotate(6deg)}}
+.survey{margin-top:22px;background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.survey h2{margin:0 0 8px;font-size:24px}
+.q{margin:14px 0}
+.q .opt{border:2px solid #ccc;padding:0 12px;margin:2px}
+.stars{display:flex;gap:4px;font-size:40px;cursor:pointer;user-select:none}
+.stars span{color:#ccc}.stars span.on{color:#f5b301}
+.survey textarea{height:80px;border:2px solid #ddd;border-radius:8px;padding:6px;line-height:1.3;font-size:20px}
+.hide{display:none}
+.foot{text-align:center;font-size:15px;color:#7a6f58;margin-top:18px}
+@media(max-width:480px){body{font-size:18px}.note{padding-left:46px}.note::before{left:32px}.comment{max-width:92%;font-size:25px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📒 반장 일기장 걷어라</h1>
+
+  <!-- 1. 작성 -->
+  <section id="write" class="note">
+    <div class="row"><span class="date" id="date"></span></div>
+    <div class="row"><label class="k">날씨</label><span class="opts" id="weather"></span></div>
+    <div class="row"><label class="k">오늘의 기분 <span style="color:var(--red)">*</span></label><span class="opts" id="mood"></span></div>
+    <div class="row"><label class="k" for="title">제목</label><input id="title" class="title" maxlength="30" placeholder="(선택)"></div>
+    <textarea id="content" placeholder="오늘 있었던 일을 적어 보세요. (8자~100자)"></textarea>
+    <div class="cnt" id="cnt">0 / 100</div>
+    <div class="err" id="err"></div>
+    <button class="main" id="submit">선생님께 제출하기</button>
+  </section>
+
+  <!-- 2. 대기 -->
+  <section id="waiting" class="note hide">
+    <div class="wait"><div class="big">✏️</div><p id="waitMsg"></p></div>
+  </section>
+
+  <!-- 3. 결과 -->
+  <section id="result" class="hide">
+    <div class="note view">
+      <div class="row"><span class="date" id="vDate"></span></div>
+      <div class="row"><b>날씨</b> <span id="vWeather"></span> &nbsp; <b>기분</b> <span id="vMood"></span></div>
+      <div class="row ttl" id="vTitle"></div>
+      <div class="body" id="vBody"></div>
+      <div class="comment"><div class="stamp">참 잘했어요</div><span id="vComment"></span></div>
+    </div>
+
+    <div class="survey" id="survey">
+      <h2>📝 선생님 코멘트, 어떠셨나요?</h2>
+      <div id="questions"></div>
+      <div class="err" id="serr"></div>
+      <button class="main" id="sSubmit">제출하기</button>
+      <div class="foot" style="margin-top:8px">설문에는 개인정보를 적지 말아 주세요.<br>오늘 무슨 일이 있었는지 궁금해. 내용은 선생님만 볼게!</div>
+    </div>
+    <div class="survey hide" id="thanks" style="text-align:center">
+      <h2>고마워요! 내일도 일기장 가져오세요 📚</h2>
+      <button class="main" id="again">새 일기 쓰기</button>
+    </div>
+  </section>
+
+  <div class="foot">일기 내용은 서버에 저장되지 않아요. 개발자도 볼 수 없어요.</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const WEATHER = [['☀️','맑음'],['⛅','구름'],['☁️','흐림'],['🌧️','비'],['❄️','눈']];
+const MOOD = [['😆','신나요'],['😊','좋아요'],['😐','그저그래요'],['😢','슬퍼요'],['😡','화나요']];
+const len = (s) => [...s].length;
+let sel = { weather: '', mood: '' }, entryId = null, questions = [], rating = 0, answers = {}, waitTimer;
+
+let anonId;
+try { anonId = localStorage.getItem('banjang_anon') || (localStorage.setItem('banjang_anon', crypto.randomUUID()), localStorage.getItem('banjang_anon')); }
+catch { anonId = crypto.randomUUID(); }
+
+const d = new Date();
+const dateStr = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${'일월화수목금토'[d.getDay()]}요일`;
+$('date').textContent = dateStr;
+
+function chips(box, list, key, optional) {
+  list.forEach(([e, t]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt'; b.title = t;
+    b.innerHTML = `<span class="e">${e}</span>`;
+    b.onclick = () => {
+      const on = sel[key] === t && optional;
+      sel[key] = on ? '' : t;
+      [...box.children].forEach((c) => c.classList.remove('on'));
+      if (!on) b.classList.add('on');
+    };
+    box.appendChild(b);
+  });
+}
+chips($('weather'), WEATHER, 'weather', true);
+chips($('mood'), MOOD, 'mood', false);
+
+$('content').addEventListener('input', () => {
+  const n = len($('content').value);
+  $('cnt').textContent = `${n} / 100`;
+  $('cnt').className = 'cnt' + (n > 100 || (n > 0 && n < 8) ? ' bad' : '');
+});
+
+function show(id) { ['write','waiting','result'].forEach((s) => $(s).classList.toggle('hide', s !== id)); window.scrollTo(0,0); }
+
+const MSGS = ['선생님이 일기를 읽고 있어요. 조금만 기다려 주세요!', '선생님이 정성껏 코멘트를 작성 중이에요. 조금만 기다려 주세요!'];
+function startWait() {
+  let i = 0; $('waitMsg').textContent = MSGS[0];
+  waitTimer = setInterval(() => { i = (i + 1) % 2; $('waitMsg').textContent = MSGS[i]; }, 3500);
+}
+
+$('submit').onclick = async () => {
+  const content = $('content').value.trim(), n = len(content);
+  $('err').textContent = '';
+  if (!sel.mood) return $('err').textContent = '오늘의 기분을 골라 주세요.';
+  if (n < 8) return $('err').textContent = '일기를 8자 이상 써 주세요.';
+  if (n > 100) return $('err').textContent = '일기는 100자까지만 쓸 수 있어요.';
+  $('submit').disabled = true;
+  show('waiting'); startWait();
+  try {
+    const r = await fetch('/api/comment', { method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ anonId, mood: sel.mood, content, title: $('title').value.trim(), weather: sel.weather }) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    entryId = data.entryId;
+    $('vDate').textContent = dateStr;
+    $('vWeather').textContent = sel.weather ? WEATHER.find((w) => w[1] === sel.weather)[0] + ' ' + sel.weather : '-';
+    $('vMood').textContent = MOOD.find((m) => m[1] === sel.mood)[0] + ' ' + sel.mood;
+    $('vTitle').textContent = $('title').value.trim() ? '제목: ' + $('title').value.trim() : '';
+    $('vBody').textContent = content;
+    $('vComment').textContent = data.comment;
+    await loadSurvey();
+    $('survey').classList.remove('hide'); $('thanks').classList.add('hide');
+    show('result');
+  } catch (e) {
+    show('write'); $('err').textContent = e.message || '문제가 생겼어요. 다시 시도해 주세요.';
+  } finally { clearInterval(waitTimer); $('submit').disabled = false; }
+};
+
+async function loadSurvey() {
+  if (!questions.length) questions = (await (await fetch('/api/survey')).json()).questions;
+  rating = 0; answers = {};
+  const box = $('questions'); box.innerHTML = '';
+  questions.forEach((q) => {
+    const div = document.createElement('div'); div.className = 'q';
+    const t = document.createElement('div'); t.textContent = q.text; t.style.fontWeight = '700'; div.appendChild(t);
+    if (q.type === 'rating') {
+      const st = document.createElement('div'); st.className = 'stars';
+      for (let i = 1; i <= 5; i++) {
+        const sp = document.createElement('span'); sp.textContent = '★';
+        sp.onclick = () => { rating = i; [...st.children].forEach((c, j) => c.classList.toggle('on', j < i)); };
+        st.appendChild(sp);
+      }
+      div.appendChild(st);
+    } else if (q.type === 'choice') {
+      q.options.forEach((o) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.textContent = o;
+        b.onclick = () => { answers[q.id] = o; [...div.querySelectorAll('.opt')].forEach((x) => x.classList.toggle('on', x === b)); };
+        div.appendChild(b);
+      });
+    } else {
+      const ta = document.createElement('textarea'); ta.maxLength = q.maxLength || 300;
+      ta.oninput = () => (answers[q.id] = ta.value); div.appendChild(ta);
+    }
+    box.appendChild(div);
+  });
+  $('serr').textContent = '';
+}
+
+$('sSubmit').onclick = async () => {
+  $('serr').textContent = '';
+  for (const q of questions) if (q.type === 'choice' && !answers[q.id]) return $('serr').textContent = '모든 문항에 답해 주세요.';
+  if (!rating) return $('serr').textContent = '1~5점 중 하나를 선택해 주세요.';
+  $('sSubmit').disabled = true;
+  try {
+    const r = await fetch('/api/survey', { method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ entryId, rating, answers }) });
+    if (!r.ok) throw new Error((await r.json()).error);
+    $('survey').classList.add('hide'); $('thanks').classList.remove('hide');
+  } catch (e) { $('serr').textContent = e.message || '제출에 실패했어요.'; }
+  finally { $('sSubmit').disabled = false; }
+};
+
+$('again').onclick = () => {
+  $('content').value = ''; $('title').value = ''; $('cnt').textContent = '0 / 100';
+  sel = { weather: '', mood: '' }; document.querySelectorAll('#write .opt').forEach((b) => b.classList.remove('on'));
+  show('write');
+};
+</script>
+</body>
+</html>

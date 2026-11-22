@@ -1,0 +1,7 @@
+{
+  "name": "banjang-diary",
+  "version": "1.0.0",
+  "description": "반장 일기장 걷어라 - 담임 선생님의 일기장 코멘트를 기다리던 그 시절, AI 피드백으로 기록 습관 만들기",
+  "private": true,
+  "engines": { "node": ">=18" }
+}

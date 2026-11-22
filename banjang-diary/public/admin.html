@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>개발자 대시보드 - 반장 일기장 걷어라</title>
+<style>
+body{font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;margin:0;background:#f5f6f8;color:#222;padding:24px}
+h1{margin:0 0 4px;font-size:22px}.sub{color:#777;font-size:13px;margin-bottom:18px}
+.card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px}
+.stats{display:flex;gap:12px;flex-wrap:wrap}.stat{flex:1;min-width:130px;background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.stat b{display:block;font-size:24px}.stat span{font-size:12px;color:#777}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:8px 10px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+th{background:#fafafa;position:sticky;top:0}.scroll{overflow:auto;max-height:70vh}
+input,button{font:inherit;padding:8px 12px;border-radius:6px;border:1px solid #ccc}button{background:#222;color:#fff;border-color:#222;cursor:pointer}
+.tag{display:inline-block;background:#eef;border-radius:4px;padding:1px 6px;margin-right:4px;font-size:12px}
+.err{color:#c00;margin-top:8px}
+</style></head><body>
+<div id="login" class="card" style="max-width:360px;margin:80px auto">
+  <h1>개발자 대시보드</h1><div class="sub">관리자 비밀번호를 입력하세요.</div>
+  <input id="pw" type="password" placeholder="비밀번호" style="width:100%;margin-bottom:8px">
+  <button id="go" style="width:100%">들어가기</button><div class="err" id="err"></div>
+</div>
+<div id="app" style="display:none">
+  <h1>📒 반장 일기장 걷어라 · 대시보드</h1>
+  <div class="sub">기분·일기 내용·제목, 접속자 상세 정보는 수집하지 않아 이 화면에서 확인할 수 없습니다.</div>
+  <div class="stats" id="stats"></div><br>
+  <div class="card"><div class="scroll"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div></div>
+</div>
+<script>
+const $=(i)=>document.getElementById(i);
+const FIELD={title:'일기 제목',weather:'날씨'};
+function cell(tr,text){const td=document.createElement('td');td.textContent=text;tr.appendChild(td);return td}
+async function load(){
+  const r=await fetch('/api/admin',{headers:{'x-admin-password':$('pw').value}});
+  if(!r.ok){$('err').textContent='비밀번호가 올바르지 않아요.';return}
+  const {questions,entries}=await r.json();
+  $('login').style.display='none';$('app').style.display='block';
+  const rated=entries.filter(e=>e.rating),users=new Set(entries.map(e=>e.user));
+  const avg=(a)=>a.length?(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1):'-';
+  $('stats').innerHTML='';
+  [['총 사용자',users.size],['총 제출',entries.length],['평균 글자 수',avg(entries.map(e=>e.charCount))],['평균 별점',avg(rated.map(e=>e.rating))],['설문 응답률',entries.length?Math.round(rated.length/entries.length*100)+'%':'-']]
+   .forEach(([k,v])=>{const d=document.createElement('div');d.className='stat';const b=document.createElement('b');b.textContent=v;const s=document.createElement('span');s.textContent=k;d.append(b,s);$('stats').appendChild(d)});
+  const head=['사용자','제출 시각','글자 수','공란 항목',...questions.map(q=>q.text)];
+  $('thead').innerHTML='';const hr=document.createElement('tr');head.forEach(h=>{const th=document.createElement('th');th.textContent=h;hr.appendChild(th)});$('thead').appendChild(hr);
+  $('tbody').innerHTML='';
+  entries.forEach(e=>{const tr=document.createElement('tr');
+    cell(tr,e.user);cell(tr,new Date(e.createdAt).toLocaleString('ko-KR'));cell(tr,e.charCount);
+    cell(tr,e.emptyFields.length?e.emptyFields.map(f=>FIELD[f]||f).join(', '):'없음');
+    questions.forEach(q=>cell(tr,q.type==='rating'?(e.rating?e.rating+'점':'미응답'):(e.answers?.[q.id]??'-')));
+    $('tbody').appendChild(tr)});
+}
+$('go').onclick=load;$('pw').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
+</script></body></html>
